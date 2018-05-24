@@ -3,6 +3,8 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/gorilla/mux"
+	uuid "github.com/satori/go.uuid"
 	"net/http"
 	"time"
 )
@@ -12,8 +14,13 @@ type Exchange int
 const (
 	BTCUSD  Exchange = iota + 1 // value: 1, type: Exchange
 	BTCLTC                      // value: 2, type: Exchange
-	BTCDoge                     // value: 3, type: Exchange
+	BTCDOGE                     // value: 3, type: Exchange
 	BTCXMR                      // value: 4, type: Exchange
+	INVALID_EXCHANGE
+)
+
+var (
+	toOrderBook chan Order
 )
 
 func (exchange Exchange) String() string {
@@ -21,7 +28,7 @@ func (exchange Exchange) String() string {
 	names := [...]string{
 		"BTCUSD",
 		"BTCLTC",
-		"BTCDoge",
+		"BTCDOGE",
 		"BTCXMR"}
 
 	// Prevent panicking in case exchange  is out of range of the enum
@@ -32,32 +39,36 @@ func (exchange Exchange) String() string {
 	return names[exchange]
 }
 
-//Order is any bid or ask on the exchange
-type Order struct {
-	id        int      // The id of the order
-	direction string   // Whether this order is buying (bid) or selling (ask)
-	exchange  Exchange // The exchange either BTC/USD, BTC/LTC, BTC/Doge, BTC/XMR(Monero)
-	number    int      // The number of coins
-	price     int      //price is always in Satoshis
-	timestamp int      // timestamp in nanoseconds
+func ExchangeFromStr(str string) Exchange {
+	fmt.Println(str)
+	switch str {
+	case "BTCUSD":
+		return BTCUSD
+	case "BTCLTC":
+		return BTCLTC
+	case "BTCDOGE":
+		return BTCDOGE
+	case "BTCXMR":
+		return BTCXMR
+	default:
+		return INVALID_EXCHANGE
+
+	}
+
 }
 
-//Fill is a match between a bid and ask for x satoshis and y number of coins
-type Fill struct {
-	id        int
-	exchange  Exchange
-	number    int
-	price     int
-	ask_id    int
-	bid_id    int
-	timestamp int
+// {"id": 123, "direction": "bid", "exchange":"BTCUSD", "number":123,"price":1000 }
+//OrderRequest struct used to submit an ask or bid to the exchange
+type OrderRequest struct {
+	Direction string `json:"direction"` // Whether this order is buying (bid) or selling (ask)
+	Exchange  string `json:"exchange"`  // The exchange either BTC/USD, BTC/LTC, BTC/Doge, BTC/XMR(Monero)
+	Number    int    `json:"number"`    // The number of coins
+	Price     int    `json:"price"`     //price is always in Satoshis
 }
 
-type Cancel struct {
-	id        int
-	exchange  Exchange
-	order_id  int
-	timestamp int
+type CancelRequest struct {
+	Order_id uuid.UUID `json:"order_id"`
+	Exchange Exchange  `json:"exchange"`
 }
 
 var netClient = &http.Client{
@@ -65,13 +76,10 @@ var netClient = &http.Client{
 }
 
 func orderHandler(w http.ResponseWriter, r *http.Request) {
-	var ord Order
-	if r.Body == nil {
-		http.Error(w, "Please send a request body", 400)
-		return
-	}
+	var ord OrderRequest
 
 	//Check for Authorization header
+	// if r.Host
 
 	// Deserialize the order
 	err := json.NewDecoder(r.Body).Decode(&ord)
@@ -79,13 +87,15 @@ func orderHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), 400)
 		return
 	}
-
+	fmt.Println(ord)
 	//Validate required fields are present
 
 	//Validate the User has enough coins to make the trade
 
 	//Create order struct and timestamp it
-
+	order := NewOrder(ord)
+	fmt.Println("order: ", order)
+	toOrderBook <- order
 	//Send Order to OrderBook chan
 
 	//Update Redis with the order
@@ -96,11 +106,7 @@ func orderHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func cancelHandler(w http.ResponseWriter, r *http.Request) {
-	var cancel Cancel
-	if r.Body == nil {
-		http.Error(w, "Please send a request body", 400)
-		return
-	}
+	var cancel CancelRequest
 
 	// Deserialize the order
 	err := json.NewDecoder(r.Body).Decode(&cancel)
@@ -122,44 +128,29 @@ func cancelHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func handler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Server", "REPORTS")
-	var u user
-	if r.Body == nil {
-		http.Error(w, "Please send a request body", 400)
-		return
-	}
-	err := json.NewDecoder(r.Body).Decode(&u)
-	if err != nil {
-		http.Error(w, err.Error(), 400)
-		return
-	}
-
-	weatherData, err := getWeather()
-	if err != nil {
-		http.Error(w, err.Error(), 500)
-		return
-	}
-
-	s, err := getStocks()
-	if err != nil {
-		http.Error(w, err.Error(), 500)
-		return
-	}
-
-	today := fmt.Sprintf(time.Now().Format(time.RFC850))
-
-	report := Report{Username: u.Username, Level: u.Level, Dow: s.Dow, SP500: s.SP500, Temp: weatherData.Temp, Weather: weatherData.Type, Time: today}
-
-	fmt.Println("Created report: ", report)
-
+func HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
+	// A very simple health check.
+	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
-	jsonData, _ := json.Marshal(report)
-	w.Write(jsonData)
 
+	// In the future we could report back on the status of our DB, or our cache
+	// (e.g. Redis) by performing a simple PING, and include them in the response.
+	w.Write([]byte("{\"alive\": true}"))
+	// io.WriteString(w, `{"alive": true}`)
 }
 
 func main() {
-	http.HandleFunc("/report", handler)
-	http.ListenAndServe(":8080", nil)
+
+	manager := NewBookManager()
+	toOrderBook = make(chan Order)
+	out := make(chan Fill)
+
+	go manager.Run(toOrderBook, out)
+
+	r := mux.NewRouter()
+
+	r.HandleFunc("/health", HealthCheckHandler)
+	r.HandleFunc("/order", orderHandler).Methods("POST")
+	r.HandleFunc("/cancel", orderHandler).Methods("POST")
+	http.ListenAndServe(":8080", r)
 }
