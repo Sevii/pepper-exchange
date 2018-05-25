@@ -6,10 +6,18 @@ import (
 	"log"
 )
 
+// Manager maintains the Orderbook
+type BookManager struct {
+	logger   log.Logger
+	Exchange Exchange
+	book     *rbt.Tree
+}
+
 // NewManager is the Book Manager constructor
-func NewBookManager() *BookManager {
-	return &BookManager{
-		book: rbt.NewWithIntComparator(),
+func NewBookManager(exchange Exchange) BookManager {
+	return BookManager{
+		book:     rbt.NewWithIntComparator(),
+		Exchange: exchange,
 	}
 }
 
@@ -21,21 +29,14 @@ func (d *BookManager) Run(in <-chan Order, out chan<- Fill) {
 			//Ask things
 			fmt.Println("ASK")
 		case BID:
+			//Bid Operations
 			fmt.Println("BID")
 		case CANCEL:
+			//Cancel an order
 			fmt.Println("CANCEL")
 		default:
 			//Drop the message
 			fmt.Println("Invalid Order Type")
 		}
 	}
-}
-
-// Manager maintains the Orderbook
-type BookManager struct {
-	logger log.Logger
-
-	in   <-chan Order
-	out  chan<- Fill
-	book *rbt.Tree
 }

@@ -9,55 +9,11 @@ import (
 	"time"
 )
 
-type Exchange int
-
-const (
-	BTCUSD  Exchange = iota + 1 // value: 1, type: Exchange
-	BTCLTC                      // value: 2, type: Exchange
-	BTCDOGE                     // value: 3, type: Exchange
-	BTCXMR                      // value: 4, type: Exchange
-	INVALID_EXCHANGE
-)
-
 var (
-	toOrderBook chan Order
+	toOrderBooks map[Exchange]chan Order
 )
 
-func (exchange Exchange) String() string {
-	// declare an array of strings in the same order as the Exchange enum
-	names := [...]string{
-		"BTCUSD",
-		"BTCLTC",
-		"BTCDOGE",
-		"BTCXMR"}
-
-	// Prevent panicking in case exchange  is out of range of the enum
-	if exchange < BTCUSD || exchange > BTCXMR {
-		return "Unknown"
-	}
-	// Returns the
-	return names[exchange]
-}
-
-func ExchangeFromStr(str string) Exchange {
-	fmt.Println(str)
-	switch str {
-	case "BTCUSD":
-		return BTCUSD
-	case "BTCLTC":
-		return BTCLTC
-	case "BTCDOGE":
-		return BTCDOGE
-	case "BTCXMR":
-		return BTCXMR
-	default:
-		return INVALID_EXCHANGE
-
-	}
-
-}
-
-// {"id": 123, "direction": "bid", "exchange":"BTCUSD", "number":123,"price":1000 }
+// {"id": 123, "direction": "bid", "exchange":"btcUsd", "number":123,"price":1000 }
 //OrderRequest struct used to submit an ask or bid to the exchange
 type OrderRequest struct {
 	Direction string `json:"direction"` // Whether this order is buying (bid) or selling (ask)
@@ -95,7 +51,18 @@ func orderHandler(w http.ResponseWriter, r *http.Request) {
 	//Create order struct and timestamp it
 	order := NewOrder(ord)
 	fmt.Println("order: ", order)
-	toOrderBook <- order
+	switch order.Exchange {
+	case BTCUSD:
+		toOrderBooks[BTCUSD] <- order
+	case BTCLTC:
+		toOrderBooks[BTCLTC] <- order
+	case BTCDOGE:
+		toOrderBooks[BTCDOGE] <- order
+	case BTCXMR:
+		toOrderBooks[BTCXMR] <- order
+	default:
+		//
+	}
 	//Send Order to OrderBook chan
 
 	//Update Redis with the order
@@ -139,18 +106,49 @@ func HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
 	// io.WriteString(w, `{"alive": true}`)
 }
 
+//setupOrderBooks populates the toOrderBooks global map
+func setupOrderBooks() {
+
+	toOrderBooks = make(map[Exchange]chan Order)
+
+	btcUsd := NewBookManager(BTCUSD)
+	btcUsdIn := make(chan Order)
+	btcUsdOut := make(chan Fill)
+
+	toOrderBooks[btcUsd.Exchange] = btcUsdIn
+	go btcUsd.Run(btcUsdIn, btcUsdOut)
+
+	btcLtc := NewBookManager(BTCLTC)
+	btcLtcIn := make(chan Order)
+	btcLtcOut := make(chan Fill)
+
+	toOrderBooks[btcLtc.Exchange] = btcLtcIn
+	go btcUsd.Run(btcLtcIn, btcLtcOut)
+
+	btcDoge := NewBookManager(BTCDOGE)
+	btcDogeIn := make(chan Order)
+	btcDogeOut := make(chan Fill)
+
+	toOrderBooks[btcDoge.Exchange] = btcDogeIn
+	go btcUsd.Run(btcDogeIn, btcDogeOut)
+
+	btcXmr := NewBookManager(BTCXMR)
+	btcXmrIn := make(chan Order)
+	btcXmrOut := make(chan Fill)
+
+	toOrderBooks[btcXmr.Exchange] = btcXmrIn
+	go btcUsd.Run(btcXmrIn, btcXmrOut)
+
+}
+
 func main() {
 
-	manager := NewBookManager()
-	toOrderBook = make(chan Order)
-	out := make(chan Fill)
-
-	go manager.Run(toOrderBook, out)
+	setupOrderBooks()
 
 	r := mux.NewRouter()
 
 	r.HandleFunc("/health", HealthCheckHandler)
 	r.HandleFunc("/order", orderHandler).Methods("POST")
-	r.HandleFunc("/cancel", orderHandler).Methods("POST")
+	r.HandleFunc("/cancel", cancelHandler).Methods("POST")
 	http.ListenAndServe(":8080", r)
 }
