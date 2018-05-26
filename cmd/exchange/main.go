@@ -43,7 +43,6 @@ func orderHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), 400)
 		return
 	}
-	fmt.Println(ord)
 	//Validate required fields are present
 
 	//Validate the User has enough coins to make the trade
@@ -61,14 +60,17 @@ func orderHandler(w http.ResponseWriter, r *http.Request) {
 	case BTCXMR:
 		toOrderBooks[BTCXMR] <- order
 	default:
-		//
+		http.Error(w, "Nonexistent Exchange requested", 400)
+		return
 	}
 	//Send Order to OrderBook chan
 
 	//Update Redis with the order
 
 	//Return 200
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(order)
 
 }
 
@@ -92,6 +94,7 @@ func cancelHandler(w http.ResponseWriter, r *http.Request) {
 
 	//Return 200
 	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
 
 }
 
@@ -138,6 +141,7 @@ func setupOrderBooks() {
 
 	toOrderBooks[btcXmr.Exchange] = btcXmrIn
 	go btcUsd.Run(btcXmrIn, btcXmrOut)
+	fmt.Println("Finished starting channels")
 
 }
 
