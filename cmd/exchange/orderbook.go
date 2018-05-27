@@ -85,7 +85,6 @@ func (d *BookManager) Run(in <-chan Order, out chan<- []Order) {
 			//Send fills to wal
 			for _, fill := range fills {
 				d.writeLog.logFill(fill)
-				fmt.Printf("%+v \n", fill)
 			}
 
 		case BID:
@@ -98,19 +97,16 @@ func (d *BookManager) Run(in <-chan Order, out chan<- []Order) {
 			//Send fills to wal
 			for _, fill := range fills {
 				d.writeLog.logFill(fill)
-				fmt.Printf("%+v \n", fill)
+
 			}
 
 		case CANCEL:
 			//Cancel an order
 			fill := cancelOrder(d.book, order.ID)
 			d.writeLog.logFill(fill)
-			fmt.Printf("%+v \n", fill)
 
 		case STATUS:
 			orders := orderStatus(d.book, order.UserId)
-			fmt.Println(orders)
-			fmt.Println("Sending order status back!", order.UserId)
 			out <- orders
 		default:
 			//Drop the message
@@ -300,8 +296,4 @@ func cancelOrder(book *rbt.Tree, orderId uuid.UUID) Fill {
 	closed := []Order{ord}
 	fill := NewFill(ord.Exchange, ord.NumberOutstanding, ord.Price, part, closed)
 	return fill
-}
-
-func (b *BookManager) Close() {
-	b.writeLog.Close()
 }

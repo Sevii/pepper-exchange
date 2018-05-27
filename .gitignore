@@ -8,12 +8,14 @@
 *.dll
 *.so
 *.dylib
-
+cmd/exchange/wal/*
 # Test binary, build with `go test -c`
 *.test
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
-
+.DS_Store
+*.DS_Store
+.DS_Store*
 # End of https://www.gitignore.io/api/go

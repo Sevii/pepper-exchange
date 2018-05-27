@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"github.com/gorilla/mux"
+	"log"
 	"net/http"
+	_ "net/http/pprof"
 )
 
 var (
@@ -59,6 +61,7 @@ func setupOrderBooks() {
 func main() {
 
 	setupOrderBooks()
+	go func() { log.Println(http.ListenAndServe("localhost:6060", nil)) }()
 
 	r := mux.NewRouter()
 

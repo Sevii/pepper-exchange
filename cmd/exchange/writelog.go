@@ -1,7 +1,8 @@
 package main
 
 import (
-	"fmt"
+	"bufio"
+	"log"
 	"os"
 )
 
@@ -11,12 +12,10 @@ const (
 
 type WriteLog struct {
 	exchange string
-	fillLog  *os.File
 }
 
 func NewWriteLog(exchange string) *WriteLog {
-	filePath := WAL_DIRECTORY + exchange
-	var log *os.File
+	filePath := WAL_DIRECTORY + "/" + exchange
 	//Check if the directory is setup or need to be setup
 	if _, err := os.Stat(WAL_DIRECTORY); os.IsNotExist(err) {
 		// path/to/whatever does not exist
@@ -28,24 +27,38 @@ func NewWriteLog(exchange string) *WriteLog {
 
 	if _, err := os.Stat(WAL_DIRECTORY + "/" + exchange); os.IsNotExist(err) {
 		// path/to/whatever does not exist
-		f, err := os.Create(filePath)
-		log = f
+		_, err := os.Create(filePath)
 		if err != nil {
 			panic(err)
 		}
 	}
-
 	return &WriteLog{
 		exchange: exchange,
-		fillLog:  log,
 	}
 }
 
-//Close closes the file that backs a writelog
-func (l *WriteLog) Close() {
-	l.fillLog.Close()
-}
+func (l WriteLog) logFill(fill Fill) {
+	f, err := os.OpenFile(WAL_DIRECTORY+"/"+l.exchange, os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
 
-func (l *WriteLog) logFill(fill Fill) {
-	l.fillLog.WriteString(fmt.Sprintf("%+v \n", fill))
+	w := bufio.NewWriter(f)
+
+	// out := fmt.Sprintf("%v \n")
+
+	w.WriteString("The snippet below installs the latest release of dep from source and sets the version in the binary so that dep version works as expected. Note that this approach is not recommended for general use. We don't try to break tip, but we also don't guarantee its stability. At the same time, we love our users who are willing to be experimental and provide us with fast feedback!")
+	// w.WriteString(fmt.Sprintf("%v \n", fill))
+	// fmt.Printf("%+v \n", fill)
+
+	bytesAvailable := w.Available()
+	if err != nil {
+		log.Fatal(err)
+	}
+	// fmt.Printf("Available buffer: %d\n", bytesAvailable)
+
+	if bytesAvailable < 500 {
+		w.Flush()
+	}
 }

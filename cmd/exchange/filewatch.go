@@ -26,6 +26,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"io/ioutil"
@@ -38,16 +39,16 @@ import (
 
 const (
 	// Time allowed to write the file to the client.
-	writeWait = 10 * time.Second
+	writeWait = 1 * time.Second
 
 	// Time allowed to read the next pong message from the client.
-	pongWait = 60 * time.Second
+	pongWait = 15 * time.Second
 
 	// Send pings to client with this period. Must be less than pongWait.
 	pingPeriod = (pongWait * 9) / 10
 
 	// Poll file for changes with this period.
-	filePeriod = 10 * time.Second
+	filePeriod = 2 * time.Second
 )
 
 var (
@@ -138,6 +139,12 @@ func FillsWebsocketHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	fmt.Println("About to upgrade!")
+	upgrader = websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+		CheckOrigin:     func(r *http.Request) bool { return true },
+	}
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		if _, ok := err.(websocket.HandshakeError); !ok {
