@@ -86,31 +86,11 @@ func orderStatusHandler(w http.ResponseWriter, r *http.Request) {
 	userId := vars["userId"]
 	statusOrder := NewStatusOrder(StatusRequest{UserID: userId, Exchange: exchange})
 
-	var orders []Order
 	//Validate required fields are present
 
 	//Create Cancel struct and timestamp it
 
 	//Create order struct and timestamp it
-
-	switch statusOrder.Exchange {
-	case BTCUSD:
-		toOrderBooks[BTCUSD] <- statusOrder
-		orders = <-fromOrderBooks[BTCUSD]
-
-	case BTCLTC:
-		toOrderBooks[BTCLTC] <- statusOrder
-		orders = <-fromOrderBooks[BTCLTC]
-	case BTCDOGE:
-		toOrderBooks[BTCDOGE] <- statusOrder
-		orders = <-fromOrderBooks[BTCDOGE]
-	case BTCXMR:
-		toOrderBooks[BTCXMR] <- statusOrder
-		orders = <-fromOrderBooks[BTCXMR]
-	default:
-		http.Error(w, "Nonexistent Exchange requested", 400)
-		return
-	}
 
 	//Send Cancel to OrderBook chan
 
@@ -120,7 +100,7 @@ func orderStatusHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
 
-	json.NewEncoder(w).Encode(orders)
+	json.NewEncoder(w).Encode(statusOrder)
 }
 
 func cancelHandler(w http.ResponseWriter, r *http.Request) {

@@ -1,8 +1,8 @@
 package main
 
 import (
-	"bufio"
-	"log"
+	"bytes"
+	"fmt"
 	"os"
 )
 
@@ -37,6 +37,23 @@ func NewWriteLog(exchange string) *WriteLog {
 	}
 }
 
+func (l WriteLog) logFills(fills []Fill) {
+	f, err := os.OpenFile(WAL_DIRECTORY+"/"+l.exchange, os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+
+	// out := fmt.Sprintf("%v \n")
+	var buffer bytes.Buffer
+
+	for _, fill := range fills {
+		buffer.WriteString(fmt.Sprintf("%v \n", fill))
+	}
+
+	f.WriteString(buffer.String())
+}
+
 func (l WriteLog) logFill(fill Fill) {
 	f, err := os.OpenFile(WAL_DIRECTORY+"/"+l.exchange, os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
@@ -44,21 +61,7 @@ func (l WriteLog) logFill(fill Fill) {
 	}
 	defer f.Close()
 
-	w := bufio.NewWriter(f)
-
 	// out := fmt.Sprintf("%v \n")
 
-	w.WriteString("The snippet below installs the latest release of dep from source and sets the version in the binary so that dep version works as expected. Note that this approach is not recommended for general use. We don't try to break tip, but we also don't guarantee its stability. At the same time, we love our users who are willing to be experimental and provide us with fast feedback!")
-	// w.WriteString(fmt.Sprintf("%v \n", fill))
-	// fmt.Printf("%+v \n", fill)
-
-	bytesAvailable := w.Available()
-	if err != nil {
-		log.Fatal(err)
-	}
-	// fmt.Printf("Available buffer: %d\n", bytesAvailable)
-
-	if bytesAvailable < 500 {
-		w.Flush()
-	}
+	f.WriteString(fmt.Sprintf("%v \n", fill))
 }

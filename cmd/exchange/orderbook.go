@@ -71,7 +71,7 @@ func NewBookManager(exchange Exchange) BookManager {
 	}
 }
 
-func (d *BookManager) Run(in <-chan Order, out chan<- []Order) {
+func (d *BookManager) Run(in <-chan Order, out chan<- Fill) {
 
 	for order := range in {
 		switch order.Direction {
@@ -82,9 +82,11 @@ func (d *BookManager) Run(in <-chan Order, out chan<- []Order) {
 				addOrder(d.book, order)
 			}
 
-			//Send fills to wal
+			//Write to WAL
+			d.writeLog.logFills(fills)
+			//Send fills to message bus
 			for _, fill := range fills {
-				d.writeLog.logFill(fill)
+				out <- fill
 			}
 
 		case BID:
@@ -94,9 +96,11 @@ func (d *BookManager) Run(in <-chan Order, out chan<- []Order) {
 				addOrder(d.book, order)
 			}
 
-			//Send fills to wal
+			//Write to WAL
+			d.writeLog.logFills(fills)
+			//Send fills to message bus
 			for _, fill := range fills {
-				d.writeLog.logFill(fill)
+				out <- fill
 
 			}
 
@@ -104,10 +108,8 @@ func (d *BookManager) Run(in <-chan Order, out chan<- []Order) {
 			//Cancel an order
 			fill := cancelOrder(d.book, order.ID)
 			d.writeLog.logFill(fill)
+			out <- fill
 
-		case STATUS:
-			orders := orderStatus(d.book, order.UserId)
-			out <- orders
 		default:
 			//Drop the message
 			fmt.Println("Invalid Order Type")
@@ -223,7 +225,7 @@ func matchNode(node *TreeNode, ord Order) (Order, []Fill) {
 					activeOrder.NumberOutstanding = 0
 					fills = append(fills, fill)
 
-					oldOrder.Fills = append(oldOrder.Fills, fills...)
+					// oldOrder.Fills = append(oldOrder.Fills, fills...)
 					node.upsert(oldOrder)
 				}
 

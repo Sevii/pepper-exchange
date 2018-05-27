@@ -33,7 +33,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strconv"
 	"time"
 )
 
@@ -153,11 +152,12 @@ func FillsWebsocketHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var lastMod time.Time
-	if n, err := strconv.ParseInt(r.FormValue("lastMod"), 16, 64); err == nil {
-		lastMod = time.Unix(0, n)
-	}
+	for i := 1; i <= 100000; i++ {
+		s := fmt.Sprintf("Message number: %d", i)
 
-	go writer(ws, lastMod, WAL_DIRECTORY+"/"+exchange)
-	reader(ws)
+		ws.WriteMessage(websocket.TextMessage, []byte(s))
+		time.Sleep(1 * time.Second)
+	}
+	defer ws.Close()
+
 }

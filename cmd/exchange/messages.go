@@ -22,7 +22,6 @@ type Order struct {
 	Price             int       //price is always in Satoshis
 	Timestamp         int       // timestamp in nanoseconds
 	UserId            string
-	Fills             []Fill // Fills involving this order
 }
 
 func NewOrder(req OrderRequest) Order {
