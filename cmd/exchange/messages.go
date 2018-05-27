@@ -21,6 +21,8 @@ type Order struct {
 	NumberOutstanding int       //Outstanding coins
 	Price             int       //price is always in Satoshis
 	Timestamp         int       // timestamp in nanoseconds
+	UserId            string
+	Fills             []Fill // Fills involving this order
 }
 
 func NewOrder(req OrderRequest) Order {
@@ -32,25 +34,34 @@ func NewOrder(req OrderRequest) Order {
 		Number:            req.Number,
 		NumberOutstanding: req.Number,
 		Price:             req.Price,
-		Timestamp:         time.Now().Nanosecond()}
+		Timestamp:         time.Now().Nanosecond(),
+		UserId:            req.UserID}
 }
 
-//Cancel is a request to cancel an outstanding order. Only non-filled parts of an order can be canceled.
-type Cancel struct {
-	ID        uuid.UUID
-	Order_id  uuid.UUID
-	Exchange  Exchange
-	Timestamp int
+func NewCancelOrder(req CancelRequest) Order {
+
+	return Order{
+		ID:                req.OrderID,
+		Direction:         CANCEL,
+		Exchange:          ExchangeFromStr(req.Exchange),
+		Number:            0,
+		NumberOutstanding: 0,
+		Price:             0,
+		Timestamp:         time.Now().Nanosecond(),
+		UserId:            req.UserID}
 }
 
-func NewCancel(req CancelRequest) Cancel {
+func NewStatusOrder(req StatusRequest) Order {
 	uid := uuid.NewV4()
-
-	return Cancel{
-		ID:        uid,
-		Order_id:  req.Order_id,
-		Exchange:  ExchangeFromStr(req.Exchange),
-		Timestamp: time.Now().Nanosecond()}
+	return Order{
+		ID:                uid,
+		Direction:         STATUS,
+		Exchange:          ExchangeFromStr(req.Exchange),
+		Number:            0,
+		NumberOutstanding: 0,
+		Price:             0,
+		Timestamp:         time.Now().Nanosecond(),
+		UserId:            req.UserID}
 }
 
 //Fill is a match between a bid and ask for x satoshis and y number of coins

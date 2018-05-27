@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"github.com/gorilla/mux"
 	uuid "github.com/satori/go.uuid"
 	"net/http"
 	"time"
@@ -14,11 +15,13 @@ type OrderRequest struct {
 	Exchange  string `json:"exchange"`  // The exchange either BTC/USD, BTC/LTC, BTC/Doge, BTC/XMR(Monero)
 	Number    int    `json:"number"`    // The number of coins
 	Price     int    `json:"price"`     //price is always in Satoshis
+	UserID    string `json:"userId"`    // User id
 }
 
 type CancelRequest struct {
-	Order_id uuid.UUID `json:"order_id"`
+	OrderID  uuid.UUID `json:"orderId"`
 	Exchange string    `json:"exchange"`
+	UserID   string    `json:"userId"` // User id
 }
 
 var netClient = &http.Client{
@@ -67,6 +70,59 @@ func orderHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
+type StatusRequest struct {
+	Exchange string `json:"exchange"`
+	UserID   string `json:"userId"` // User id
+}
+
+func orderStatusHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	exchange := vars["exchange"]
+	exe := ExchangeFromStr(exchange)
+	if exe == INVALID_EXCHANGE {
+		http.Error(w, "Nonexistent Exchange requested", 400)
+		return
+	}
+	userId := vars["userId"]
+	statusOrder := NewStatusOrder(StatusRequest{UserID: userId, Exchange: exchange})
+
+	var orders []Order
+	//Validate required fields are present
+
+	//Create Cancel struct and timestamp it
+
+	//Create order struct and timestamp it
+
+	switch statusOrder.Exchange {
+	case BTCUSD:
+		toOrderBooks[BTCUSD] <- statusOrder
+		orders = <-fromOrderBooks[BTCUSD]
+
+	case BTCLTC:
+		toOrderBooks[BTCLTC] <- statusOrder
+		orders = <-fromOrderBooks[BTCLTC]
+	case BTCDOGE:
+		toOrderBooks[BTCDOGE] <- statusOrder
+		orders = <-fromOrderBooks[BTCDOGE]
+	case BTCXMR:
+		toOrderBooks[BTCXMR] <- statusOrder
+		orders = <-fromOrderBooks[BTCXMR]
+	default:
+		http.Error(w, "Nonexistent Exchange requested", 400)
+		return
+	}
+
+	//Send Cancel to OrderBook chan
+
+	//Update Redis with the cancelation
+
+	//Return 200
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+
+	json.NewEncoder(w).Encode(orders)
+}
+
 func cancelHandler(w http.ResponseWriter, r *http.Request) {
 	var cancel CancelRequest
 
@@ -80,6 +136,22 @@ func cancelHandler(w http.ResponseWriter, r *http.Request) {
 	//Validate required fields are present
 
 	//Create Cancel struct and timestamp it
+
+	//Create order struct and timestamp it
+	cancelOrder := NewCancelOrder(cancel)
+	switch cancelOrder.Exchange {
+	case BTCUSD:
+		toOrderBooks[BTCUSD] <- cancelOrder
+	case BTCLTC:
+		toOrderBooks[BTCLTC] <- cancelOrder
+	case BTCDOGE:
+		toOrderBooks[BTCDOGE] <- cancelOrder
+	case BTCXMR:
+		toOrderBooks[BTCXMR] <- cancelOrder
+	default:
+		http.Error(w, "Nonexistent Exchange requested", 400)
+		return
+	}
 
 	//Send Cancel to OrderBook chan
 

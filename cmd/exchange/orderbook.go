@@ -28,8 +28,9 @@ func (n *TreeNode) delete(id uuid.UUID) {
 	delete(n.orders, id)
 }
 
-func (n *TreeNode) get(id uuid.UUID) Order {
-	return n.orders[id]
+func (n *TreeNode) get(id uuid.UUID) (Order, bool) {
+	ord, ok := n.orders[id]
+	return ord, ok
 }
 
 func (n TreeNode) sortedOrders() []Order {
@@ -58,6 +59,7 @@ type BookManager struct {
 	logger   log.Logger
 	Exchange Exchange
 	book     *rbt.Tree
+	writeLog *WriteLog
 }
 
 // NewManager is the Book Manager constructor
@@ -65,26 +67,51 @@ func NewBookManager(exchange Exchange) BookManager {
 	return BookManager{
 		book:     rbt.NewWithIntComparator(),
 		Exchange: exchange,
+		writeLog: NewWriteLog(exchange.String()),
 	}
 }
 
-func (d *BookManager) Run(in <-chan Order, out chan<- Fill) {
+func (d *BookManager) Run(in <-chan Order, out chan<- []Order) {
 
 	for order := range in {
 		switch order.Direction {
 		case ASK:
 			//Ask things
-			fmt.Println("ASK CHAN")
-			addOrder(d.book, order)
+			executedOrder, fills := executeOrder(d.book, order)
+			if executedOrder.NumberOutstanding > 0 {
+				addOrder(d.book, order)
+			}
+
+			//Send fills to wal
+			for _, fill := range fills {
+				d.writeLog.logFill(fill)
+				fmt.Printf("%+v \n", fill)
+			}
 
 		case BID:
 			//Bid Operations
-			fmt.Println("BID CHAN")
-			addOrder(d.book, order)
+			executedOrder, fills := executeOrder(d.book, order)
+			if executedOrder.NumberOutstanding > 0 {
+				addOrder(d.book, order)
+			}
+
+			//Send fills to wal
+			for _, fill := range fills {
+				d.writeLog.logFill(fill)
+				fmt.Printf("%+v \n", fill)
+			}
+
 		case CANCEL:
 			//Cancel an order
-			fmt.Println("CANCEL CHAN")
-			addOrder(d.book, order)
+			fill := cancelOrder(d.book, order.ID)
+			d.writeLog.logFill(fill)
+			fmt.Printf("%+v \n", fill)
+
+		case STATUS:
+			orders := orderStatus(d.book, order.UserId)
+			fmt.Println(orders)
+			fmt.Println("Sending order status back!", order.UserId)
+			out <- orders
 		default:
 			//Drop the message
 			fmt.Println("Invalid Order Type")
@@ -105,11 +132,17 @@ func executeOrder(book *rbt.Tree, ord Order) (Order, []Fill) {
 
 			//Check price
 			if ord.Price >= nodePrice {
-				// Have to append to top level variable but am dealing with scoped binding as well :=
+				// Have to append to top level variable but am dealing with scoped binding as well :=,
+				// so it takes an extra line
+
 				nodeOrderResult, nodeFills := matchNode(node, ord)
 				ord = nodeOrderResult
+				for _, fill := range nodeFills {
+					if fill.Number > 0 {
+						fills = append(fills, fill)
+					}
+				}
 
-				fills = append(fills, nodeFills...)
 			} else {
 				//skip this node, too expensive (The cheapest ask could be higher than this bid)
 				continue
@@ -119,9 +152,6 @@ func executeOrder(book *rbt.Tree, ord Order) (Order, []Fill) {
 				// if we have 0 outstanding we can quit
 				break
 			}
-
-			fmt.Println("Node Price: \n", nodePrice)
-			fmt.Println("Node: \n", node)
 
 		}
 		return ord, fills
@@ -134,11 +164,13 @@ func executeOrder(book *rbt.Tree, ord Order) (Order, []Fill) {
 
 			//Check price
 			if ord.Price <= nodePrice {
-				// Have to append to top level variable but am dealing with scoped binding as well :=
 				nodeOrderResult, nodeFills := matchNode(node, ord)
 				ord = nodeOrderResult
-
-				fills = append(fills, nodeFills...)
+				for _, fill := range nodeFills {
+					if fill.Number > 0 {
+						fills = append(fills, fill)
+					}
+				}
 			} else {
 				//skip this node, too expensive (The cheapest ask could be higher than this bid)
 				continue
@@ -148,9 +180,6 @@ func executeOrder(book *rbt.Tree, ord Order) (Order, []Fill) {
 				// if we have 0 outstanding we can quit
 				break
 			}
-
-			fmt.Println("Node Price: \n", nodePrice)
-			fmt.Println("Node: \n", node)
 
 		}
 		return ord, fills
@@ -174,8 +203,6 @@ func matchNode(node *TreeNode, ord Order) (Order, []Fill) {
 
 	for _, oldOrder := range orders {
 		if activeOrder.Direction != oldOrder.Direction {
-			fmt.Println("ActiveOrd Outstanding: ", activeOrder.NumberOutstanding)
-			fmt.Println("Old order outstanding: ", oldOrder.Number)
 
 			// If the current order can fill new order
 			if ord.NumberOutstanding <= oldOrder.NumberOutstanding {
@@ -184,17 +211,25 @@ func matchNode(node *TreeNode, ord Order) (Order, []Fill) {
 				if oldOrder.NumberOutstanding-ord.NumberOutstanding == 0 {
 					closed = append(closed, oldOrder)
 					node.delete(oldOrder.ID)
+					fill := NewFill(activeOrder.Exchange, activeOrder.NumberOutstanding, oldOrder.Price, part, closed)
+
+					//Order is filled
+					activeOrder.NumberOutstanding = 0
+					fills = append(fills, fill)
+
 				} else { // Update old order
 					oldRemaining := oldOrder.NumberOutstanding - activeOrder.NumberOutstanding
 					oldOrder.NumberOutstanding = oldRemaining
+
+					fill := NewFill(activeOrder.Exchange, activeOrder.NumberOutstanding, oldOrder.Price, part, closed)
+
+					//Order is filled
+					activeOrder.NumberOutstanding = 0
+					fills = append(fills, fill)
+
+					oldOrder.Fills = append(oldOrder.Fills, fills...)
 					node.upsert(oldOrder)
 				}
-
-				fill := NewFill(activeOrder.Exchange, activeOrder.NumberOutstanding, oldOrder.Price, part, closed)
-
-				//Order is filled
-				activeOrder.NumberOutstanding = 0
-				fills = append(fills, fill)
 
 			} else { // If the current order is to small to fill the new order
 				//How do we delete the old order?
@@ -216,7 +251,7 @@ func matchNode(node *TreeNode, ord Order) (Order, []Fill) {
 }
 
 //addOrder adds an order that cannot be filled any further to the orderbook
-func addOrder(book *rbt.Tree, ord Order) (Order, error) {
+func addOrder(book *rbt.Tree, ord Order) Order {
 	treeNode, ok := book.Get(ord.Price)
 	if !ok {
 		node := NewTreeNode()
@@ -229,9 +264,23 @@ func addOrder(book *rbt.Tree, ord Order) (Order, error) {
 		node.upsert(ord)
 		book.Put(ord.Price, treeNode)
 	}
-	fmt.Println(book)
 
-	return Order{}, nil
+	return ord
+}
+
+func orderStatus(book *rbt.Tree, userId string) []Order {
+	var userOrders []Order
+	it := book.Iterator()
+	for it.Begin(); it.Next(); {
+		_, node := it.Key().(int), it.Value().(*TreeNode)
+		for _, order := range node.sortedOrders() {
+			if order.UserId == userId {
+				userOrders = append(userOrders, order)
+			}
+		}
+	}
+
+	return userOrders
 }
 
 //cancelOrder cancels (deletes) an outstanding order from the orderbook
@@ -240,7 +289,10 @@ func cancelOrder(book *rbt.Tree, orderId uuid.UUID) Fill {
 	it := book.Iterator()
 	for it.Begin(); it.Next(); {
 		_, node := it.Key().(int), it.Value().(*TreeNode)
-		ord = node.get(orderId)
+		possibleOrder, ok := node.get(orderId)
+		if ok {
+			ord = possibleOrder
+		}
 		node.delete(orderId)
 
 	}
@@ -248,4 +300,8 @@ func cancelOrder(book *rbt.Tree, orderId uuid.UUID) Fill {
 	closed := []Order{ord}
 	fill := NewFill(ord.Exchange, ord.NumberOutstanding, ord.Price, part, closed)
 	return fill
+}
+
+func (b *BookManager) Close() {
+	b.writeLog.Close()
 }

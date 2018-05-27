@@ -1,9 +1,5 @@
 package main
 
-import (
-	"fmt"
-)
-
 type Exchange int
 type Operation int
 
@@ -11,6 +7,7 @@ const (
 	ASK    Operation = iota // value: 1, type: BookOperation
 	BID                     // value: 2, type: BookOperation
 	CANCEL                  // value: 3, type: BookOperation
+	STATUS
 	INVALID_OPERATION
 )
 
@@ -40,7 +37,6 @@ func (exchange Exchange) String() string {
 }
 
 func ExchangeFromStr(str string) Exchange {
-	fmt.Println("BTCLTC", BTCLTC.String())
 	switch str {
 	case "BTCUSD":
 		return BTCUSD
@@ -63,6 +59,7 @@ func (operation Operation) String() string {
 		"ASK",
 		"BID",
 		"CANCEL",
+		"STATUS",
 		"INVALID"}
 
 	// Prevent panicking in case exchange  is out of range of the enum
@@ -74,17 +71,15 @@ func (operation Operation) String() string {
 }
 
 func OperationFromStr(str string) Operation {
-	fmt.Println(str)
 	switch str {
 	case "ask":
-		fmt.Println(str, ASK)
 		return ASK
 	case "bid":
-		fmt.Println(str, BID)
 		return BID
 	case "cancel":
-		fmt.Println(str, CANCEL)
 		return CANCEL
+	case "status":
+		return STATUS
 	default:
 		return INVALID_OPERATION
 	}
