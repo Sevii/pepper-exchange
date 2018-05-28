@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 	"os"
 )
 
@@ -48,7 +47,7 @@ func (l WriteLog) logFills(fills []Fill) {
 	var buffer bytes.Buffer
 
 	for _, fill := range fills {
-		buffer.WriteString(fmt.Sprintf("%v \n", fill))
+		buffer.WriteString(fill.Json() + "\n")
 	}
 
 	f.WriteString(buffer.String())
@@ -63,5 +62,5 @@ func (l WriteLog) logFill(fill Fill) {
 
 	// out := fmt.Sprintf("%v \n")
 
-	f.WriteString(fmt.Sprintf("%v \n", fill))
+	f.WriteString(fill.Json() + "\n")
 }

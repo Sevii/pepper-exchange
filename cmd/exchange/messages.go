@@ -87,6 +87,14 @@ func NewFill(exc Exchange, num int, price int, part []Order, closed []Order) Fil
 		Closed:       closed}
 }
 
+func (f Fill) Json() string {
+	b, err := json.Marshal(f)
+	if err != nil {
+		return "Cannot convert to JSON"
+	}
+	return string(b)
+}
+
 func String(s Fill) string {
 	out, err := json.Marshal(s)
 	if err != nil {

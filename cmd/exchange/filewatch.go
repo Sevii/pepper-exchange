@@ -26,19 +26,19 @@
 package main
 
 import (
-	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 )
 
 const (
 	// Time allowed to write the file to the client.
-	writeWait = 1 * time.Second
+	writeWait = 5 * time.Second
 
 	// Time allowed to read the next pong message from the client.
 	pongWait = 15 * time.Second
@@ -138,7 +138,6 @@ func FillsWebsocketHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println("About to upgrade!")
 	upgrader = websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
@@ -152,12 +151,11 @@ func FillsWebsocketHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for i := 1; i <= 100000; i++ {
-		s := fmt.Sprintf("Message number: %d", i)
-
-		ws.WriteMessage(websocket.TextMessage, []byte(s))
-		time.Sleep(1 * time.Second)
+	var lastMod time.Time
+	if n, err := strconv.ParseInt(r.FormValue("lastMod"), 16, 64); err == nil {
+		lastMod = time.Unix(0, n)
 	}
-	defer ws.Close()
 
+	go writer(ws, lastMod, WAL_DIRECTORY+"/"+exchange)
+	reader(ws)
 }

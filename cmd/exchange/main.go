@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
@@ -97,5 +98,10 @@ func main() {
 	r.HandleFunc("/cancel", cancelHandler).Methods("POST")
 	r.HandleFunc("/order-status/{userId}/{exchange}", orderStatusHandler).Methods("GET")
 	r.HandleFunc("/stream/fills/{exchange}", FillsWebsocketHandler).Methods("GET")
-	http.ListenAndServe(":8080", r)
+
+	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type"})
+	originsOk := handlers.AllowedOrigins([]string{"*"})
+	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
+
+	http.ListenAndServe(":8080", handlers.CORS(originsOk, headersOk, methodsOk)(r))
 }
