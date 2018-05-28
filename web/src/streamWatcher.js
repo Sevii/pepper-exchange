@@ -24,7 +24,7 @@ class StreamWatcher extends Component {
       // let objs = JSON.parse(latest[1])
       let objs = _.map(latest, line => JSON.parse(line.trim()))
 
-      // console.log(objs)
+      // console.log(this.state.fills)
       this.setState({fills: objs });
 
     }
@@ -35,7 +35,7 @@ class StreamWatcher extends Component {
 
       const listItems = this.state.fills.map((fill) =>
         <li key={fill.id}>
-          Fill: {fill.id} Exchange: {fill.exchange} Direction {fill.direction} Price: {fill.price} Number: {fill.number} Timestamp: {fill.timestamp}
+          Fill: {fill.id} Exchange: {fill.exchange} Price: {fill.price} Number: {fill.number} Timestamp: {fill.timestamp}
         </li>
       );
 

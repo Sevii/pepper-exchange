@@ -87,6 +87,7 @@ func main() {
 	setupOrderBuses()
 
 	resolver := NewAccountResolver()
+	resolver.initiate()
 	go resolver.Run(fillBuses)
 
 	go func() { log.Println(http.ListenAndServe("localhost:6060", nil)) }()
@@ -96,7 +97,7 @@ func main() {
 	r.HandleFunc("/health", HealthCheckHandler)
 	r.HandleFunc("/order", orderHandler).Methods("POST")
 	r.HandleFunc("/cancel", cancelHandler).Methods("POST")
-	r.HandleFunc("/order-status/{userId}/{exchange}", orderStatusHandler).Methods("GET")
+	r.HandleFunc("/status/{userId}", accountStatusHandler).Methods("GET")
 	r.HandleFunc("/stream/fills/{exchange}", FillsWebsocketHandler).Methods("GET")
 
 	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type"})

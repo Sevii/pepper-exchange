@@ -1,5 +1,10 @@
 package main
 
+import (
+	"bytes"
+	"encoding/json"
+)
+
 type Exchange int
 type Operation int
 
@@ -84,4 +89,42 @@ func OperationFromStr(str string) Operation {
 		return INVALID_OPERATION
 	}
 
+}
+
+func (d *Exchange) MarshalJSON() ([]byte, error) {
+	buffer := bytes.NewBufferString(`"`)
+	buffer.WriteString(d.String())
+	buffer.WriteString(`"`)
+	return buffer.Bytes(), nil
+}
+
+func (d *Exchange) UnmarshalJSON(b []byte) error {
+	// unmarshal as string
+	var s string
+	err := json.Unmarshal(b, &s)
+	if err != nil {
+		return err
+	}
+	// lookup value
+	*d = ExchangeFromStr(s)
+	return nil
+}
+
+func (d *Operation) MarshalJSON() ([]byte, error) {
+	buffer := bytes.NewBufferString(`"`)
+	buffer.WriteString(d.String())
+	buffer.WriteString(`"`)
+	return buffer.Bytes(), nil
+}
+
+func (d *Operation) UnmarshalJSON(b []byte) error {
+	// unmarshal as string
+	var s string
+	err := json.Unmarshal(b, &s)
+	if err != nil {
+		return err
+	}
+	// lookup value
+	*d = OperationFromStr(s)
+	return nil
 }

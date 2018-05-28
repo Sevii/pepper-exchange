@@ -14,7 +14,6 @@ func NewFillBus() *FillBus {
 func (d *FillBus) Run(in <-chan Fill) {
 	for fill := range in {
 		//WAL
-
 		for _, sub := range d.subscribers {
 
 			sub <- fill

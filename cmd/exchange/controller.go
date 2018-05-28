@@ -42,6 +42,11 @@ func orderHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	//Validate required fields are present
 
+	if ord.Price < 0 || ord.Number <= 0 {
+		http.Error(w, "Invalid order parameters, number of coins or price is unacceptable.", 400)
+		return
+	}
+
 	//Validate the User has enough coins to make the trade
 
 	//Create order struct and timestamp it
@@ -75,32 +80,19 @@ type StatusRequest struct {
 	UserID   string `json:"userId"` // User id
 }
 
-func orderStatusHandler(w http.ResponseWriter, r *http.Request) {
+func accountStatusHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	exchange := vars["exchange"]
-	exe := ExchangeFromStr(exchange)
-	if exe == INVALID_EXCHANGE {
-		http.Error(w, "Nonexistent Exchange requested", 400)
-		return
-	}
+
 	userId := vars["userId"]
-	statusOrder := NewStatusOrder(StatusRequest{UserID: userId, Exchange: exchange})
-
-	//Validate required fields are present
-
-	//Create Cancel struct and timestamp it
-
-	//Create order struct and timestamp it
-
-	//Send Cancel to OrderBook chan
-
-	//Update Redis with the cancelation
-
+	accountStatus, err := getAccountStatusRedis(userId)
+	if err != nil {
+		http.Error(w, "Failed to get your account", 500)
+	}
 	//Return 200
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
 
-	json.NewEncoder(w).Encode(statusOrder)
+	json.NewEncoder(w).Encode(accountStatus)
 }
 
 func cancelHandler(w http.ResponseWriter, r *http.Request) {

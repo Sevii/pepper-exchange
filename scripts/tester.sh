@@ -13,7 +13,7 @@ curl -X POST \
     "exchange": "BTCUSD",
     "number": 777,
     "price": 30,
-    "userId": "NACK"
+    "userId": "BOB"
 }'
 
 curl -X POST \
@@ -26,7 +26,7 @@ curl -X POST \
     "exchange": "BTCUSD",
     "number": 777,
     "price": 35,
-    "userId": "NACK"
+    "userId": "BOB"
 }'
 sleep 1
 curl -X POST \
@@ -39,7 +39,7 @@ curl -X POST \
     "exchange": "BTCUSD",
     "number": 777,
     "price": 40,
-    "userId": "NACK"
+    "userId": "BOB"
 }'
 
 curl -X POST \
@@ -52,7 +52,7 @@ curl -X POST \
     "exchange": "BTCUSD",
     "number": 777,
     "price": 45,
-    "userId": "NACK"
+    "userId": "BOB"
 }'
 
 curl -X POST \
@@ -65,7 +65,7 @@ curl -X POST \
     "exchange": "BTCUSD",
     "number": 777,
     "price": 30,
-    "userId": "JACK"
+    "userId": "ALICE"
 }'
 sleep 1
 curl -X POST \
@@ -78,7 +78,7 @@ curl -X POST \
     "exchange": "BTCUSD",
     "number": 777,
     "price": 30,
-    "userId": "JACK"
+    "userId": "ALICE"
 }'
 
 curl -X POST \
@@ -91,7 +91,7 @@ curl -X POST \
     "exchange": "BTCUSD",
     "number": 777,
     "price": 30,
-    "userId": "JACK"
+    "userId": "ALICE"
 }'
 
 sleep 1
@@ -106,7 +106,7 @@ curl -X POST \
     "exchange": "BTCUSD",
     "number": 777,
     "price": 35,
-    "userId": "JACK"
+    "userId": "ALICE"
 }'
 curl -X POST \
   http://localhost:8080/order \
@@ -118,7 +118,7 @@ curl -X POST \
     "exchange": "BTCUSD",
     "number": 7888,
     "price": 50,
-    "userId": "JACK"
+    "userId": "ALICE"
 }'
 
 done

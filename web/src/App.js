@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import logo from './logo.svg';
-import StreamWatcher from './streamWatcher.js';
+import StreamWatcher from './StreamWatcher.js';
+import AccountStatusForm from './AccountStatusForm.js';
 import OrderForm from './OrderForm.js';
 import registerServiceWorker from './registerServiceWorker';
 
@@ -15,6 +16,10 @@ class App extends Component {
 
         <div>
           <StreamWatcher />
+        </div>
+
+        <div>
+        <AccountStatusForm />
         </div>
         <p className="App-intro">
           To get started, edit <code>src/App.js</code> and save to reload.

@@ -2,14 +2,9 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	uuid "github.com/satori/go.uuid"
 	"time"
 )
-
-type BookOperation interface {
-	Type() Operation
-}
 
 // {"id": 123, "direction": "bid", "exchange":"BTCUSD", "number":123,"price":1000 }
 //Order is any bid or ask on the exchange
@@ -65,13 +60,13 @@ func NewStatusOrder(req StatusRequest) Order {
 
 //Fill is a match between a bid and ask for x satoshis and y number of coins
 type Fill struct {
-	ID           uuid.UUID `json:"id"`
-	Exchange     Exchange  `json:"exchange"`
-	Number       int       `json:"number"`
-	Price        int       `json:"price"`
-	Timestamp    int       `json:"timestamp"`
-	Participants []Order   `json:"participants"`
-	Closed       []Order   `json:"closed"`
+	ID           uuid.UUID
+	Exchange     Exchange
+	Number       int
+	Price        int
+	Timestamp    int
+	Participants []Order
+	Closed       []Order
 }
 
 func NewFill(exc Exchange, num int, price int, part []Order, closed []Order) Fill {
@@ -93,13 +88,4 @@ func (f Fill) Json() string {
 		return "Cannot convert to JSON"
 	}
 	return string(b)
-}
-
-func String(s Fill) string {
-	out, err := json.Marshal(s)
-	if err != nil {
-		panic(err)
-	}
-
-	return fmt.Sprint(string(out))
 }
