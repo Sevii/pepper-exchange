@@ -1,9 +1,16 @@
 
 
+Welcome to Pepper Exchange this is a rough demo cryptocurrency exchange. 
 
-`curl -H "Content-Type: application/json" -d '{
-    "direction": "bid",
-    "exchange": "BTCUSD",
-    "number": 100,
-    "price": 33
-}' http://localhost:8080/order`
+###Directories###
+
+`cmd` contains the golang code for the backend api of the exchange
+`scripts` contains bash used for testing
+`vendor` contains golang dependencies
+`web` contains the reactjs frontend
+
+###Components###
+
+Golang executable `exchange`
+Redis Server with no authentication configured
+React frontend
