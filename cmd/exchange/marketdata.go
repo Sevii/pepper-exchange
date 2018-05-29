@@ -65,7 +65,8 @@ func getMarketData() (MarketData, error) {
 	var recentFills []Fill
 	err = json.Unmarshal([]byte(fillsJson), &recentFills)
 	if err != nil {
-		return MarketData{}, err
+		recentFills = make([]Fill, 1)
+		log.Println("Failed to get recent fills from redis")
 	}
 
 	usdMarketString, err := redisClient.Get("usd.market.price").Result()
