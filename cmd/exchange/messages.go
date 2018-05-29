@@ -9,13 +9,13 @@ import (
 // {"id": 123, "direction": "bid", "exchange":"BTCUSD", "number":123,"price":1000 }
 //Order is any bid or ask on the exchange
 type Order struct {
-	ID                uuid.UUID // The id of the order
-	Direction         Operation // Whether this order is buying (bid) or selling (ask)
-	Exchange          Exchange  // The exchange either BTC/USD, BTC/LTC, BTC/Doge, BTC/XMR(Monero)
-	Number            int       // The number of coins
-	NumberOutstanding int       //Outstanding coins
-	Price             int       //price is always in Satoshis
-	Timestamp         int       // timestamp in nanoseconds
+	ID                uuid.UUID `json:"id"`                // The id of the order
+	Direction         Operation `json:"direction"`         // Whether this order is buying (bid) or selling (ask)
+	Exchange          Exchange  `json:"exchange"`          // The exchange either BTC/USD, BTC/LTC, BTC/Doge, BTC/XMR(Monero)
+	Number            int       `json:"number"`            // The number of coins
+	NumberOutstanding int       `json:"numberOutstanding"` //Outstanding coins
+	Price             int       `json:"price"`             //price is always in Satoshis
+	Timestamp         int       `json:"timestamp"`         // timestamp in nanoseconds
 	UserId            string
 }
 
@@ -60,13 +60,13 @@ func NewStatusOrder(req StatusRequest) Order {
 
 //Fill is a match between a bid and ask for x satoshis and y number of coins
 type Fill struct {
-	ID           uuid.UUID
-	Exchange     Exchange
-	Number       int
-	Price        int
-	Timestamp    int
-	Participants []Order
-	Closed       []Order
+	ID           uuid.UUID `json:"id"`
+	Exchange     Exchange  `json:"exchange"`
+	Number       int       `json:"number"`
+	Price        int       `json:"price"`
+	Timestamp    int       `json:"timestamp"`
+	Participants []Order   `json:"participants"`
+	Closed       []Order   `json:"closed"`
 }
 
 func NewFill(exc Exchange, num int, price int, part []Order, closed []Order) Fill {

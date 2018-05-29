@@ -17,11 +17,11 @@ const (
 )
 
 type MarketData struct {
-	USDPrice  int
-	LTCPrice  int
-	DOGEPrice int
-	XMRPrice  int
-	LastFills []Fill
+	USDPrice  int    `json:"usdPrice"`
+	LTCPrice  int    `json:"ltcPrice"`
+	DOGEPrice int    `json:"dogePrice"`
+	XMRPrice  int    `json:"xmrPrice"`
+	LastFills []Fill `json:"lastFills"`
 }
 
 func RunMarketData(buses map[Exchange]*FillBus) {

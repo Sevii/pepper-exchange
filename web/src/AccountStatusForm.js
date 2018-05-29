@@ -9,6 +9,7 @@ class AccountStatusForm extends React.Component {
       ltc: 0,
       xmr: 0,
       doge: 0,
+      totalValue: 0,
       userId: "BOB"
     };
 
@@ -16,9 +17,11 @@ class AccountStatusForm extends React.Component {
     this.getStatus = this.getStatus.bind(this);
   }
 
-
- componentDidMount() {
-    this.getStatus()
+  componentDidMount() {
+    this.interval = setInterval(() => this.getStatus(), 1000);
+  }
+  componentWillUnmount() {
+    clearInterval(this.interval);
   }
 
 
@@ -30,11 +33,12 @@ class AccountStatusForm extends React.Component {
     .then((responseText) => responseText.json())
     .then((account) =>
       this.setState({
-        ["usd"]: account.USD,
-        ["btc"]: account.BTC,
-        ["ltc"]: account.LTC,
-        ["doge"]: account.DOGE,
-        ["xmr"]: account.XMR,
+        ["usd"]: account.usd,
+        ["btc"]: account.btc,
+        ["ltc"]: account.ltc,
+        ["doge"]: account.doge,
+        ["xmr"]: account.xmr,
+        ["totalValue"]: account.totalValue
        })
     )
   }
@@ -56,24 +60,27 @@ class AccountStatusForm extends React.Component {
 
   render() {
     return (
-      <div>
-        <form>
-          <label>
-            Your Name
-            <select name="selectUser" value={this.state.userId} onChange={this.handleInputChange}>
-              <option value="BOB">BOB</option>
-              <option value="ALICE">ALICE</option>
-              <option value="ROBODOG">ROBODOG</option>
-              <option value="KID1">KID1</option>
-              <option value="KID2">KID2</option>
-              <option value="KID3">KID3</option>
-              <option value="KID4">KID4</option>
-              <option value="OTHERKID">OTHERKID</option>
-            </select>
-          </label>
-        </form>
-        <div>
-          User: {this.state.userId} USD: {this.state.usd} BTC: {this.state.btc} LTC: {this.state.ltc} DOGE: {this.state.doge} XMR: {this.state.xmr}
+      <div className="card">
+        <div className="card-body">
+          <div className="form-group">
+            <form >
+              <label>
+                <select className="form-control" name="selectUser" value={this.state.userId} onChange={this.handleInputChange}>
+                  <option value="BOB">BOB</option>
+                  <option value="ALICE">ALICE</option>
+                  <option value="ROBODOG">ROBODOG</option>
+                  <option value="KID1">KID1</option>
+                  <option value="KID2">KID2</option>
+                  <option value="KID3">KID3</option>
+                  <option value="KID4">KID4</option>
+                  <option value="OTHERKID">OTHERKID</option>
+                </select>
+              </label>
+            </form>
+            <div>
+              User: {this.state.userId} USD: <bold>{this.state.usd}</bold> Satoshi (BTC/100,000,000): {this.state.btc} LTC: {this.state.ltc} DOGE: {this.state.doge} XMR: {this.state.xmr} Total Value (Satoshi): {this.state.totalValue}
+            </div>
+          </div>
         </div>
       </div>
     );

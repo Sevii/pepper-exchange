@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 )
 
@@ -14,14 +15,13 @@ const (
 )
 
 type Account struct {
-	UserId string
-	USD    int
-	LTC    int
-	BTC    int
-	XMR    int
-	DOGE   int
-	// orders      []Order
-	// fills       []Fill
+	UserId     string `json:"userId"`
+	USD        int    `json:"usd"`
+	LTC        int    `json:"ltc"`
+	BTC        int    `json:"btc"`
+	XMR        int    `json:"xmr"`
+	DOGE       int    `json:"doge"`
+	TotalValue int    `json:"totalValue"`
 }
 
 //AccountResolver watches fill updates from the exchange and keeps user accounts up to date
@@ -238,11 +238,23 @@ func getAccountStatusRedis(userId string) (Account, error) {
 	doge, _ := strconv.Atoi(dogeBalance)
 	xmr, _ := strconv.Atoi(xmrBalance)
 
+	//Calculate Value of Portfolio
+	var totalValue = 0
+	market, err := getMarketData()
+	if err != nil {
+		log.Println("Failed to get market data to calculate portfolio value.")
+	} else {
+		totalValue = btc + usd*market.USDPrice + ltc*market.LTCPrice + doge*market.DOGEPrice + xmr*market.XMRPrice
+	}
+
+	// log.Println(usd, btc, ltc, doge, xmr)
+	// log.Println("Portfolio value: ", totalValue, "UserID: ", userId)
 	return Account{UserId: userId,
-		USD:  int(usd),
-		BTC:  int(btc),
-		LTC:  int(ltc),
-		DOGE: int(doge),
-		XMR:  int(xmr),
+		USD:        usd,
+		BTC:        btc,
+		LTC:        ltc,
+		DOGE:       doge,
+		XMR:        xmr,
+		TotalValue: totalValue,
 	}, nil
 }

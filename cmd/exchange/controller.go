@@ -104,6 +104,7 @@ func accountStatusHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to get your account", 500)
 		return
 	}
+
 	//Return 200
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

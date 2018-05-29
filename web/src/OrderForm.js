@@ -65,18 +65,21 @@ class OrderForm extends React.Component {
 
   render() {
     return (
-      <form>
+      <form >
+      <div className="form-group">
         <label>
           Number of coins:
-          <input
+          <input 
+            className="form-control"
             name="numberOfCoins"
             type="number"
             value={this.state.number}
             onChange={this.handleInputChange} />
         </label>
-        <label>
-          Price per coin:
-          <input
+        <label className="form-control">
+          Bitcoin per coin:
+          <input 
+            className="form-control"
             name="pricePerCoin"
             type="number"
             value={this.state.price}
@@ -84,7 +87,7 @@ class OrderForm extends React.Component {
         </label>
       <label>
           Pick your exchange.
-          <select name="selectExchange" value={this.state.exchange} onChange={this.handleInputChange}>
+          <select className="form-control" name="selectExchange" value={this.state.exchange} onChange={this.handleInputChange}>
             <option value="BTCUSD">Trade bitcoin for USD</option>
             <option value="BTCLTC">Trade bitcoin for LTC</option>
             <option value="BTCDOGE">Trade bitcoin for DOGE</option>
@@ -93,7 +96,7 @@ class OrderForm extends React.Component {
         </label>
        <label>
           Pick your direction (Bid/Ask/Cancel).
-          <select name="selectDirection" value={this.state.direction} onChange={this.handleInputChange}>
+          <select className="form-control" name="selectDirection" value={this.state.direction} onChange={this.handleInputChange}>
             <option value="bid">Bid for a coin</option>
             <option value="ask">Ask for a price</option>
             <option value="cancel">Cancel an order</option>
@@ -101,7 +104,7 @@ class OrderForm extends React.Component {
         </label>
         <label>
           Your Name
-          <select name="selectUser" value={this.state.userId} onChange={this.handleInputChange}>
+          <select className="form-control" name="selectUser" value={this.state.userId} onChange={this.handleInputChange}>
             <option value="BOB">BOB</option>
             <option value="ALICE">ALICE</option>
             <option value="ROBODOG">ROBODOG</option>
@@ -121,13 +124,13 @@ class OrderForm extends React.Component {
             onChange={this.handleInputChange} />
         </label>
         <label>
-          Submit
-          <button
+          <button className="btn btn-primary"
             name="submitOrder"
             type="button"
             value="Submit"
-            onClick={this.submitOrderRequest} />
+            onClick={this.submitOrderRequest}> Submit </button>
         </label>
+        </div>
       </form>
     );
   }

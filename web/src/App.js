@@ -1,30 +1,31 @@
 import React, { Component } from 'react';
 import logo from './logo.svg';
-import StreamWatcher from './StreamWatcher.js';
 import AccountStatusForm from './AccountStatusForm.js';
 import OrderForm from './OrderForm.js';
-import registerServiceWorker from './registerServiceWorker';
+import MarketData from './MarketData.js'
 
 class App extends Component {
   render() {
     return (
-      <div className="App">
+      <div className="App container">
         
-        <div>
+        <div className="car">
+        <AccountStatusForm />
+        </div>
+
+        
+        <div className="card">
           <OrderForm />
         </div>
 
-        <div>
-          <StreamWatcher />
-        </div>
 
-        <div>
-        <AccountStatusForm />
+        <div className="car">
+          <MarketData />
         </div>
-        <p className="App-intro">
-          To get started, edit <code>src/App.js</code> and save to reload.
-        </p>
+        
       </div>
+
+
     );
   }
 }
