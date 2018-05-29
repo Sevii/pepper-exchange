@@ -78,7 +78,7 @@ class AccountStatusForm extends React.Component {
               </label>
             </form>
             <div>
-              User: {this.state.userId} USD: <bold>{this.state.usd}</bold> Satoshi (BTC/100,000,000): {this.state.btc} LTC: {this.state.ltc} DOGE: {this.state.doge} XMR: {this.state.xmr} Total Value (Satoshi): {this.state.totalValue}
+              User: {this.state.userId} USD: {this.state.usd} Satoshi (BTC/100,000,000): {this.state.btc} LTC: {this.state.ltc} DOGE: {this.state.doge} XMR: {this.state.xmr} Total Value (Satoshi): {this.state.totalValue}
             </div>
           </div>
         </div>

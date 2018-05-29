@@ -247,8 +247,6 @@ func getAccountStatusRedis(userId string) (Account, error) {
 		totalValue = btc + usd*market.USDPrice + ltc*market.LTCPrice + doge*market.DOGEPrice + xmr*market.XMRPrice
 	}
 
-	// log.Println(usd, btc, ltc, doge, xmr)
-	// log.Println("Portfolio value: ", totalValue, "UserID: ", userId)
 	return Account{UserId: userId,
 		USD:        usd,
 		BTC:        btc,
@@ -257,4 +255,43 @@ func getAccountStatusRedis(userId string) (Account, error) {
 		XMR:        xmr,
 		TotalValue: totalValue,
 	}, nil
+}
+
+func ValidateOrder(order Order) bool {
+	accountStatus, err := getAccountStatusRedis(order.UserId)
+	if err != nil {
+		log.Println("Could not get account data from redis")
+		return false
+	}
+	var valid bool
+	switch order.Exchange {
+	case BTCUSD:
+		if order.Direction == ASK {
+			valid = accountStatus.USD > order.Number
+		} else if order.Direction == BID {
+			valid = accountStatus.BTC > order.Price*order.Number
+		}
+	case BTCLTC:
+		if order.Direction == ASK {
+			valid = accountStatus.LTC > order.Number
+		} else if order.Direction == BID {
+			valid = accountStatus.BTC > order.Price*order.Number
+		}
+	case BTCDOGE:
+		if order.Direction == ASK {
+			valid = accountStatus.DOGE > order.Number
+		} else if order.Direction == BID {
+			valid = accountStatus.BTC > order.Price*order.Number
+		}
+	case BTCXMR:
+		if order.Direction == ASK {
+			valid = accountStatus.XMR > order.Number
+		} else if order.Direction == BID {
+			valid = accountStatus.BTC > order.Price*order.Number
+		}
+	default:
+		//Do nothing
+	}
+
+	return valid
 }

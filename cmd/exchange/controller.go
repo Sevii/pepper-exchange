@@ -48,10 +48,18 @@ func orderHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Create Order struct
+	order := NewOrder(ord)
+
 	//Validate the User has enough coins to make the trade
+	valid := ValidateOrder(order)
+	if valid != true {
+		http.Error(w, "You cannot afford it.", 400)
+		return
+	}
 
 	//Create order struct and timestamp it
-	order := NewOrder(ord)
+
 	switch order.Exchange {
 	case BTCUSD:
 		toOrderBooks[BTCUSD] <- order
