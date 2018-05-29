@@ -24,3 +24,4 @@ Go to `web` and run `npm install`, `npm start` to boot up the webserver
 
 
 ### Architecture ###
+![Architecture Diagram](Architecture.png)
