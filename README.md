@@ -34,12 +34,12 @@ Account Status
 ![Architecture Diagram](Architecture.png)
 
 Glossary:
-Orderbook/Matching Engine   A binary tree data structure and goroutine combined into a single struct.
-FillBus 					A message bus
-WAL							Write ahead log, used for durability
-MarketData					A goroutine that pushes latest prices into redis
-AccountResolver				A goroutine update portfolio state and pushes it to redis.
-Redis						A high speed data structure store / cache
+* Orderbook/Matching Engine   A binary tree data structure and goroutine combined into a single struct.
+* FillBus 					A message bus
+* WAL							Write ahead log, used for durability
+* MarketData					A goroutine that pushes latest prices into redis
+* AccountResolver				A goroutine update portfolio state and pushes it to redis.
+* Redis						A high speed data structure store / cache
 
 
 The exchange relies on goroutines and gochannels to coordinate state and avoid locks. There is an orderbook for each coin pair that we support, namely BTC/USD, BTC/LTC, BTC/DOGE, BTC/XMR. Each orderbook is protected by a goroutine that only accepts communication over a channel. This should allow the orderbooks to operate in a single threaded state with minimal locks, resulting in quick operation for the matching engine. 
@@ -55,5 +55,7 @@ Once the matching engine finishes walking the tree for matches and places the ou
 The FillBus is a message bus which sends fills out to subscribers. The extant subscribers are the `AccountResolver` and `MarketData` goroutines. These goroutines consume fills from the matching engine and use it to keep track of user balances and market conditions. The data they create is saved to Redis and consumed in HTTP read operations later. There is a bit of cross-redis coupling between the two when we calculate the total value in bitcoin of a portfolio. To calculate the portfolio value we need to get the exchange rates out of redis. 
 
 Data flow is unidirectional through the Orderbook and into Redis. Reads are served out of Redis exclusivly, order submissions involve an account check which hits redis, and then are submitted to the orderbook input channel. 
+
+
 
 
