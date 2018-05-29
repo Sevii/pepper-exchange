@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/go-redis/redis"
 	"strconv"
 )
 
@@ -12,10 +11,6 @@ const (
 	pathLTC  = ".ltc"
 	pathXMR  = ".xmr"
 	pathDOGE = ".doge"
-)
-
-var (
-	redisClient *redis.Client // Redis Client is safe for concurrent use by multiple goroutines
 )
 
 type Account struct {
@@ -67,12 +62,6 @@ func (a *AccountResolver) setupAccounts() {
 }
 
 func (a AccountResolver) initiate() {
-	redisClient = redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "", // no password set
-		DB:       0,  // use default DB
-	})
-
 	a.setupAccounts()
 	a.setupRedis()
 }

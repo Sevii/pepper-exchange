@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/gorilla/mux"
 	uuid "github.com/satori/go.uuid"
+	"log"
 	"net/http"
 	"time"
 )
@@ -80,6 +81,20 @@ type StatusRequest struct {
 	UserID   string `json:"userId"` // User id
 }
 
+func marketDataHandler(w http.ResponseWriter, r *http.Request) {
+	market, err := getMarketData()
+	if err != nil {
+		http.Error(w, "Failed to get Market data", 500)
+		log.Println(err)
+		return
+	}
+
+	//Return 200
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(market)
+}
+
 func accountStatusHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
@@ -87,10 +102,11 @@ func accountStatusHandler(w http.ResponseWriter, r *http.Request) {
 	accountStatus, err := getAccountStatusRedis(userId)
 	if err != nil {
 		http.Error(w, "Failed to get your account", 500)
+		return
 	}
 	//Return 200
-	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
 
 	json.NewEncoder(w).Encode(accountStatus)
 }

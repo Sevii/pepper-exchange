@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/go-redis/redis"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"log"
@@ -13,6 +14,8 @@ var (
 	toOrderBooks   map[Exchange]chan Order
 	fromOrderBooks map[Exchange]chan Fill
 	fillBuses      map[Exchange]*FillBus
+	redisClient    *redis.Client // Redis Client is safe for concurrent use by multiple goroutines
+
 )
 
 //setupOrderBooks populates the toOrderBooks global map
@@ -83,12 +86,19 @@ func setupOrderBuses() {
 
 func main() {
 
+	redisClient = redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "", // no password set
+		DB:       0,  // use default DB
+	})
+
 	setupOrderBooks()
 	setupOrderBuses()
 
 	resolver := NewAccountResolver()
 	resolver.initiate()
 	go resolver.Run(fillBuses)
+	go RunMarketData(fillBuses)
 
 	go func() { log.Println(http.ListenAndServe("localhost:6060", nil)) }()
 
@@ -98,7 +108,7 @@ func main() {
 	r.HandleFunc("/order", orderHandler).Methods("POST")
 	r.HandleFunc("/cancel", cancelHandler).Methods("POST")
 	r.HandleFunc("/status/{userId}", accountStatusHandler).Methods("GET")
-	r.HandleFunc("/stream/fills/{exchange}", FillsWebsocketHandler).Methods("GET")
+	r.HandleFunc("/marketdata", marketDataHandler).Methods("GET")
 
 	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type"})
 	originsOk := handlers.AllowedOrigins([]string{"*"})

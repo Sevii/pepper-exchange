@@ -85,6 +85,14 @@ func OperationFromStr(str string) Operation {
 		return CANCEL
 	case "status":
 		return STATUS
+	case "ASK":
+		return ASK
+	case "BID":
+		return BID
+	case "CANCEL":
+		return CANCEL
+	case "STATUS":
+		return STATUS
 	default:
 		return INVALID_OPERATION
 	}
@@ -124,6 +132,7 @@ func (d *Operation) UnmarshalJSON(b []byte) error {
 	if err != nil {
 		return err
 	}
+
 	// lookup value
 	*d = OperationFromStr(s)
 	return nil
