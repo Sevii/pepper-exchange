@@ -24,11 +24,11 @@ Go to `web` and run `npm install`, `npm start` to boot up the webserver
 
 ### Postman ###
 There are postman tests in Pepper_Exchange.postman_colleciton.json for the 5 endpoints we have.
-Health
-Submit Order
-Cancel Order
-Market Data
-Account Status
+* Health
+* Submit Order
+* Cancel Order
+* Market Data
+* Account Status
 
 ### Architecture ###
 ![Architecture Diagram](Architecture.png)
