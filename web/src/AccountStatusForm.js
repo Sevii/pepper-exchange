@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component } from "react";
 
 class AccountStatusForm extends React.Component {
   constructor(props) {
@@ -24,38 +24,35 @@ class AccountStatusForm extends React.Component {
     clearInterval(this.interval);
   }
 
-
   getStatus(data) {
-    var address = 'http://localhost:8080/status/' + this.state.userId
+    var address = "http://localhost:8080/status/" + this.state.userId;
     return fetch(address, {
-      method: 'GET'
+      method: "GET"
     })
-    .then((responseText) => responseText.json())
-    .then((account) =>
-      this.setState({
-        ["usd"]: account.usd,
-        ["btc"]: account.btc,
-        ["ltc"]: account.ltc,
-        ["doge"]: account.doge,
-        ["xmr"]: account.xmr,
-        ["totalValue"]: account.totalValue
-       })
-    )
+      .then(responseText => responseText.json())
+      .then(account =>
+        this.setState({
+          ["usd"]: account.usd,
+          ["btc"]: account.btc,
+          ["ltc"]: account.ltc,
+          ["doge"]: account.doge,
+          ["xmr"]: account.xmr,
+          ["totalValue"]: account.totalValue
+        })
+      );
   }
 
   handleInputChange(event) {
     const target = event.target;
     const value = target.value;
-    if(target.name === "selectUser"){
-      this.setState({
-        ["userId"]: value
-       },
+    if (target.name === "selectUser") {
+      this.setState(
+        {
+          ["userId"]: value
+        },
         this.getStatus
-       );
-      
+      );
     }
-    
-
   }
 
   render() {
@@ -63,9 +60,14 @@ class AccountStatusForm extends React.Component {
       <div className="card">
         <div className="card-body">
           <div className="form-group">
-            <form >
+            <form>
               <label>
-                <select className="form-control" name="selectUser" value={this.state.userId} onChange={this.handleInputChange}>
+                <select
+                  className="form-control"
+                  name="selectUser"
+                  value={this.state.userId}
+                  onChange={this.handleInputChange}
+                >
                   <option value="BOB">BOB</option>
                   <option value="ALICE">ALICE</option>
                   <option value="ROBODOG">ROBODOG</option>
@@ -78,7 +80,10 @@ class AccountStatusForm extends React.Component {
               </label>
             </form>
             <div>
-              User: {this.state.userId} USD: {this.state.usd} Satoshi (BTC/100,000,000): {this.state.btc} LTC: {this.state.ltc} DOGE: {this.state.doge} XMR: {this.state.xmr} Total Value (Satoshi): {this.state.totalValue}
+              User: {this.state.userId} USD: {this.state.usd} Satoshi
+              (BTC/100,000,000): {this.state.btc} LTC: {this.state.ltc} DOGE:{" "}
+              {this.state.doge} XMR: {this.state.xmr} Total Value (Satoshi):{" "}
+              {this.state.totalValue}
             </div>
           </div>
         </div>

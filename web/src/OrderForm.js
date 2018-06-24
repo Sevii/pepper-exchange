@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component } from "react";
 
 class OrderForm extends React.Component {
   constructor(props) {
@@ -17,119 +17,140 @@ class OrderForm extends React.Component {
   }
 
   submitOrderRequest(event) {
-    fetch('http://localhost:8080/order', {
-      method: 'POST',
+    fetch("http://localhost:8080/order", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json'
+        "Content-Type": "application/json"
       },
       body: JSON.stringify(this.state)
-    })
+    });
   }
 
   handleInputChange(event) {
     const target = event.target;
     const value = target.value;
-    if(target.name === "numberOfCoins"){
+    if (target.name === "numberOfCoins") {
       this.setState({
-      ["number"]: value
-    });
+        ["number"]: value
+      });
     }
-    if(target.name === "pricePerCoin"){
+    if (target.name === "pricePerCoin") {
       this.setState({
-      ["price"]: value
-    }); 
+        ["price"]: value
+      });
     }
-    if(target.name === "selectExchange"){
+    if (target.name === "selectExchange") {
       this.setState({
-      ["exchange"]: value
-    });
+        ["exchange"]: value
+      });
     }
-    if(target.name === "selectDirection"){
+    if (target.name === "selectDirection") {
       this.setState({
-      ["direction"]: value
-    });
+        ["direction"]: value
+      });
     }
-    if(target.name === "selectUser"){
+    if (target.name === "selectUser") {
       this.setState({
-      ["userId"]: value
-    }); 
+        ["userId"]: value
+      });
     }
-    if(target.name === "cancelId"){
+    if (target.name === "cancelId") {
       this.setState({
-      ["cancelId"]: value
-    }); 
+        ["cancelId"]: value
+      });
     }
-
-
   }
 
   render() {
     return (
-      <form >
-      <div className="form-group">
-        <label>
-          Number of coins:
-          <input 
-            className="form-control"
-            name="numberOfCoins"
-            type="number"
-            value={this.state.number}
-            onChange={this.handleInputChange} />
-        </label>
-        <label className="form-control">
-          Bitcoin per coin:
-          <input 
-            className="form-control"
-            name="pricePerCoin"
-            type="number"
-            value={this.state.price}
-            onChange={this.handleInputChange} />
-        </label>
-      <label>
-          Pick your exchange.
-          <select className="form-control" name="selectExchange" value={this.state.exchange} onChange={this.handleInputChange}>
-            <option value="BTCUSD">Trade bitcoin for USD</option>
-            <option value="BTCLTC">Trade bitcoin for LTC</option>
-            <option value="BTCDOGE">Trade bitcoin for DOGE</option>
-            <option value="BTCXMR">Trade bitcoin for XMR</option>
-          </select>
-        </label>
-       <label>
-          Pick your direction (Bid/Ask/Cancel).
-          <select className="form-control" name="selectDirection" value={this.state.direction} onChange={this.handleInputChange}>
-            <option value="bid">Bid for a coin</option>
-            <option value="ask">Ask for a price</option>
-            <option value="cancel">Cancel an order</option>
-          </select>
-        </label>
-        <label>
-          Your Name
-          <select className="form-control" name="selectUser" value={this.state.userId} onChange={this.handleInputChange}>
-            <option value="BOB">BOB</option>
-            <option value="ALICE">ALICE</option>
-            <option value="ROBODOG">ROBODOG</option>
-            <option value="KID1">KID1</option>
-            <option value="KID2">KID2</option>
-            <option value="KID3">KID3</option>
-            <option value="KID4">KID4</option>
-            <option value="OTHERKID">OTHERKID</option>
-          </select>
-        </label>
-         <label>
-          Order to cancel ID
-          <input
-            name="cancelId"
-            type="text"
-            value={this.state.cancelId}
-            onChange={this.handleInputChange} />
-        </label>
-        <label>
-          <button className="btn btn-primary"
-            name="submitOrder"
-            type="button"
-            value="Submit"
-            onClick={this.submitOrderRequest}> Submit </button>
-        </label>
+      <form>
+        <div className="form-group">
+          <label>
+            Number of coins:
+            <input
+              className="form-control"
+              name="numberOfCoins"
+              type="number"
+              value={this.state.number}
+              onChange={this.handleInputChange}
+            />
+          </label>
+          <label className="form-control">
+            Bitcoin per coin:
+            <input
+              className="form-control"
+              name="pricePerCoin"
+              type="number"
+              value={this.state.price}
+              onChange={this.handleInputChange}
+            />
+          </label>
+          <label>
+            Pick your exchange.
+            <select
+              className="form-control"
+              name="selectExchange"
+              value={this.state.exchange}
+              onChange={this.handleInputChange}
+            >
+              <option value="BTCUSD">Trade bitcoin for USD</option>
+              <option value="BTCLTC">Trade bitcoin for LTC</option>
+              <option value="BTCDOGE">Trade bitcoin for DOGE</option>
+              <option value="BTCXMR">Trade bitcoin for XMR</option>
+            </select>
+          </label>
+          <label>
+            Pick your direction (Bid/Ask/Cancel).
+            <select
+              className="form-control"
+              name="selectDirection"
+              value={this.state.direction}
+              onChange={this.handleInputChange}
+            >
+              <option value="bid">Bid for a coin</option>
+              <option value="ask">Ask for a price</option>
+              <option value="cancel">Cancel an order</option>
+            </select>
+          </label>
+          <label>
+            Your Name
+            <select
+              className="form-control"
+              name="selectUser"
+              value={this.state.userId}
+              onChange={this.handleInputChange}
+            >
+              <option value="BOB">BOB</option>
+              <option value="ALICE">ALICE</option>
+              <option value="ROBODOG">ROBODOG</option>
+              <option value="KID1">KID1</option>
+              <option value="KID2">KID2</option>
+              <option value="KID3">KID3</option>
+              <option value="KID4">KID4</option>
+              <option value="OTHERKID">OTHERKID</option>
+            </select>
+          </label>
+          <label>
+            Order to cancel ID
+            <input
+              name="cancelId"
+              type="text"
+              value={this.state.cancelId}
+              onChange={this.handleInputChange}
+            />
+          </label>
+          <label>
+            <button
+              className="btn btn-primary"
+              name="submitOrder"
+              type="button"
+              value="Submit"
+              onClick={this.submitOrderRequest}
+            >
+              {" "}
+              Submit{" "}
+            </button>
+          </label>
         </div>
       </form>
     );
